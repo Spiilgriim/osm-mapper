@@ -5,17 +5,15 @@
 <script>
 import maposm from "./components/map.vue";
 export default {
-  name: 'app',
+  name: "app",
   components: {
     maposm
   },
-  data () {
-    return {
-    }
+  data() {
+    return {};
   }
-}
+};
 </script>
 
 <style>
-
 </style>

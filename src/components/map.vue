@@ -1,26 +1,47 @@
 <template>
   <div id="mapwrapper">
+    <div id="presentation">
+      <h1>OSM road difficulty mapping tool</h1>
+      <a href="https://gitlab.com/Spiilgriim/osm-mapper">
+        <img src="../assets/gitlab-icon-1-color-white-rgb.svg" alt="Gitlab" width="60" height="60" />
+      </a>
+    </div>
     <div id="navbar">
-      <div id="searchbar">
-        <input type="text" v-model="locationSearch" />
+      <div id="searchbar-div">
+        <input
+          id="location-search-bar"
+          type="text"
+          v-model="locationSearch"
+          @keyup.enter="updateView"
+        />
         <button id="search-button" @click="updateView">search</button>
       </div>
       <button id="refresh-button" @click="updateOSMData">refresh</button>
       <button id="download-button" @click="downloadCSV">Download</button>
+      <button id="upload-button" @click="showUpload = !showUpload">Upload</button>
+      <div id="upload-div" v-show="showUpload">
+        <input
+          type="file"
+          name="File Upload"
+          id="txtFileUpload"
+          accept=".csv"
+          @change="readParseCSV"
+        />
+        <p
+          id="upload-count"
+        >Rendered {{ uploadedEdgeLoaded }}/{{ Object.keys(uploadedData).length }} edges from file</p>
+      </div>
     </div>
     <div id="osmmap"></div>
     <div id="color-picker">
-      <div id="green-color" @click="changeColorToGreen">
-        <div id="green-color-show"></div>
-        <p id="green-color-value">Praticable par tous</p>
+      <div id="green-color" @click="changeColorToGreen" :style="{borderColor: greenBorderColor}">
+        <p id="green-color-value">Accessible for everyone</p>
       </div>
-      <div id="orange-color">
-        <div id="orange-color-show" @click="changeColorToOrange"></div>
-        <p id="orange-color-value">Impraticable en fauteuil</p>
+      <div id="orange-color" @click="changeColorToOrange" :style="{borderColor: orangeBorderColor}">
+        <p id="orange-color-value">Inaccessible with a wheelchair</p>
       </div>
-      <div id="red-color">
-        <div id="red-color-show" @click="changeColorToRed"></div>
-        <p id="red-color-value">Impraticable</p>
+      <div id="red-color" @click="changeColorToRed" :style="{borderColor: redBorderColor}">
+        <p id="red-color-value">Inaccessible</p>
       </div>
     </div>
   </div>
@@ -36,11 +57,34 @@ export default {
       mymap: null,
       currentNodeList: {},
       currentEdgeList: {},
-      locationSearch: "Default Location",
-      currentColor: { color: "red", value: "test" },
+      locationSearch: "Ecole des Mines de Saint-Etienne",
+      currentColor: { color: "#D9042B", value: 2 },
       savedEdges: {},
-      defaultColor: "#3388ff"
+      defaultColor: "#3388ff",
+      showUpload: false,
+      uploadedData: {},
+      uploadedEdgeLoaded: 0
     };
+  },
+  computed: {
+    greenBorderColor: function() {
+      if (this.currentColor.value == 0) {
+        return "#04af1d";
+      }
+      return "#04D924";
+    },
+    orangeBorderColor: function() {
+      if (this.currentColor.value == 1) {
+        return "#c89704";
+      }
+      return "#F2B705";
+    },
+    redBorderColor: function() {
+      if (this.currentColor.value == 2) {
+        return "#af0423";
+      }
+      return "#D9042B";
+    }
   },
   methods: {
     updateOSMData: function() {
@@ -69,6 +113,7 @@ export default {
             };
           }
         }
+        vueMap.uploadedEdgeLoaded = 0;
         for (let i = 0; i < osmResponse.length; i++) {
           if (
             osmResponse[i].type == "way" &&
@@ -96,6 +141,33 @@ export default {
                     ]
                   ])
                   .addTo(vueMap.mymap);
+                if (
+                  [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
+                  vueMap.uploadedData
+                ) {
+                  vueMap.uploadedEdgeLoaded++;
+                  vueMap.savedEdges[
+                    [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
+                  ] =
+                    vueMap.uploadedData[
+                      [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
+                    ];
+                  switch (
+                    vueMap.uploadedData[
+                      [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
+                    ]
+                  ) {
+                    case 0:
+                      polyline.setStyle({ color: "#04D924" });
+                      break;
+                    case 1:
+                      polyline.setStyle({ color: "#F2B705" });
+                      break;
+                    case 2:
+                      polyline.setStyle({ color: "#D9042B" });
+                      break;
+                  }
+                }
                 polyline.on("click", e => {
                   if (
                     [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
@@ -166,15 +238,15 @@ export default {
         .addTo(this.mymap);
     },
     changeColorToGreen() {
-      this.currentColor.color = "green";
+      this.currentColor.color = "#04D924";
       this.currentColor.value = 0;
     },
     changeColorToOrange() {
-      this.currentColor.color = "orange";
+      this.currentColor.color = "#F2B705";
       this.currentColor.value = 1;
     },
     changeColorToRed() {
-      this.currentColor.color = "red";
+      this.currentColor.color = "#D9042B";
       this.currentColor.value = 2;
     },
     getIdFromString(idString) {
@@ -182,7 +254,7 @@ export default {
       return [idString.slice(0, index), idString.slice(index + 1)];
     },
     downloadCSV() {
-      var csv = 'Node1,Node2,Difficulty\n';
+      var csv = "Node1;Node2;Difficulty\n";
       for (let edge in this.savedEdges) {
         let edgeId = this.getIdFromString(edge);
         csv += [edgeId[0], edgeId[1], this.savedEdges[edge]].join(";");
@@ -193,14 +265,51 @@ export default {
       var blob = new Blob(["\ufeff", csv]);
       var url = URL.createObjectURL(blob);
       downloadLink.href = url;
-      downloadLink.download = this.locationSearch+".csv";
+      let dateStamp = new Date(Date.now()).toISOString();
+      downloadLink.download = this.locationSearch + dateStamp + ".csv";
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
+    },
+    readParseCSV(event) {
+      let file = event.target.files[0];
+      let reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = function(vueMap) {
+        vueMap.uploadedData = {};
+        let csvData = reader.result;
+        let temp = ["", "", ""];
+        let separator = ";";
+        if (csvData.indexOf(",") > csvData.indexOf(";")) {
+          separator = ",";
+        }
+        while (csvData.length > 1) {
+          temp = ["", "", ""];
+          let nextCut = csvData.indexOf(separator);
+          temp[0] = csvData.slice(0, nextCut);
+          csvData = csvData.slice(nextCut + 1);
+          nextCut = csvData.indexOf(separator);
+          temp[1] = csvData.slice(0, nextCut);
+          csvData = csvData.slice(nextCut + 1);
+          nextCut = csvData.indexOf("\n");
+          temp[2] = csvData.slice(0, nextCut);
+          csvData = csvData.slice(nextCut + 1);
+          if (
+            !isNaN(parseInt(temp[0])) &&
+            !isNaN(parseInt(temp[1]))&&
+            !isNaN(parseInt(temp[2]))
+          ) {
+            vueMap.uploadedData[
+              [parseInt(temp[0]), parseInt(temp[1])]
+            ] = parseInt(temp[2]);
+          }
+        }
+        vueMap.updateOSMData();
+      }.bind(reader, this);
     }
   },
   mounted() {
-    this.mymap = leaflet.map("osmmap").setView([50.7, 7.15], 18);
+    this.mymap = leaflet.map("osmmap").setView([45.4241297, 4.4077427], 16);
     leaflet
       .tileLayer(
         "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}",
@@ -221,67 +330,130 @@ export default {
 </script>
 
 <style scoped>
-#osmmap {
-  height: 80vh;
+#presentation {
+  background-color: #2d2d2d;
+  color: white;
+  height: 80px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: "Ubuntu Mono", monospace;
 }
 
-#searchbar {
+#presentation h1 {
+  margin-left: 10px;
   display: inline-block;
 }
 
-#refresh-button {
+#presentation a {
   float: right;
-}
-
-#download-button {
-  float: right;
+  margin-top: 10px;
+  margin-right: 10px;
 }
 
 #navbar {
   margin-bottom: 10px;
+  margin-top: 100px;
+}
+
+#searchbar-div {
+  display: inline-block;
+}
+
+#location-search-bar {
+  width: 500px;
+  border: 1px solid rgb(226, 226, 226);
+  padding: 5px;
+}
+
+#search-button {
+  background-color: #3388ff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  height: 25px;
+}
+
+#upload-button {
+  float: right;
+  margin-right: 5px;
+  background-color: #f2b705;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  height: 25px;
+}
+
+#download-button {
+  float: right;
+  margin-right: 5px;
+  background-color: #d93d04;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  height: 25px;
+}
+
+#refresh-button {
+  float: right;
+  background-color: #04d924;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  height: 25px;
+  margin-right: 5px;
+}
+
+#upload-div {
+  position: absolute;
+  right: 5px;
+  top: 135px;
+  border: 1px solid #f2b705;
+  z-index: 10;
+  background-color: white;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: "Ubuntu Mono", monospace;
+}
+
+#osmmap {
+  height: 75vh;
+  z-index: 1;
 }
 
 #color-picker {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  column-gap: 20px;
-  margin-top: 20px;
+  float: center;
+  align-items: center;
+  justify-content: center;
 }
 
 #color-picker p {
   display: inline-block;
+  font-family: "Ubuntu Mono", monospace;
+  color: white;
 }
 
 #green-color {
   grid-column: 1/2;
-}
-
-#green-color-show {
-  background-color: green;
-  width: 30px;
-  height: 30px;
-  display: inline-block;
+  background-color: #04d924;
+  text-align: center;
+  border: 5px solid;
 }
 
 #orange-color {
   grid-column: 2/3;
-}
-
-#orange-color-show {
-  background-color: orange;
-  width: 30px;
-  height: 30px;
-  display: inline-block;
+  background-color: #f2b705;
+  text-align: center;
+  border: 5px solid;
 }
 
 #red-color {
   grid-column: 3/4;
-}
-
-#red-color-show {
-  background-color: red;
-  width: 30px;
-  height: 30px;
-  display: inline-block;
+  background-color: #d9042b;
+  text-align: center;
+  border: 5px solid;
 }
 </style>

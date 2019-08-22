@@ -5,7 +5,7 @@
 
 ## Map
 
-The map is obtained from [Open Street Map](https://wiki.openstreetmap.org/wiki/Main_Page) data. The search bar requests are made with (nominatim)[https://wiki.openstreetmap.org/wiki/Nominatim]. OSM's data are filtered before being rendered: are not displayed:
+The map is obtained from [Open Street Map](https://wiki.openstreetmap.org/wiki/Main_Page) data. The search bar requests are made with [nominatim](https://wiki.openstreetmap.org/wiki/Nominatim). OSM's data are filtered before being rendered: are not displayed:
 * buildings
 * Highways with access tagged as private
 

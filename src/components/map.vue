@@ -3,7 +3,7 @@
     <div id="presentation">
       <h1>OSM road difficulty mapping tool</h1>
       <a href="https://gitlab.com/Spiilgriim/osm-mapper">
-        <img src="../assets/gitlab-icon-1-color-white-rgb.svg" alt="Gitlab" width="60" height="60" />
+        <img src="../assets/gitlablogo.png" alt="Gitlab" width="60" height="60" />
       </a>
     </div>
     <div id="navbar">
@@ -296,7 +296,7 @@ export default {
           csvData = csvData.slice(nextCut + 1);
           if (
             !isNaN(parseInt(temp[0])) &&
-            !isNaN(parseInt(temp[1]))&&
+            !isNaN(parseInt(temp[1])) &&
             !isNaN(parseInt(temp[2]))
           ) {
             vueMap.uploadedData[
@@ -350,8 +350,8 @@ export default {
   float: right;
   margin-top: 10px;
   margin-right: 10px;
+  color: white;
 }
-
 #navbar {
   margin-bottom: 10px;
   margin-top: 100px;

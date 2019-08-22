@@ -1,7 +1,7 @@
 <template>
   <div id="mapwrapper">
     <div id="presentation">
-      <h1>OSM road difficulty mapping tool</h1>
+      <h1>OSM road accessibility mapping tool</h1>
       <a href="https://gitlab.com/Spiilgriim/osm-mapper">
         <img src="../assets/gitlablogo.png" alt="Gitlab" width="60" height="60" />
       </a>
@@ -31,6 +31,7 @@
           id="upload-count"
         >Rendered {{ uploadedEdgeLoaded }}/{{ Object.keys(uploadedData).length }} edges from file</p>
       </div>
+      <br>
     </div>
     <div id="osmmap"></div>
     <div id="color-picker">

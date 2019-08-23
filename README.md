@@ -11,7 +11,7 @@ The map is obtained from [Open Street Map](https://wiki.openstreetmap.org/wiki/M
 
 ## CSV
 
-The correct format for CSV is `","` or `";"` separated elements and `"\n"` separated rows. The upload will run and display what it can extract from the given CSV without to find errors so if the input format is not correct, the parsing might not work and will display no error. A CSV generated with this toll will be in the right format to be read by this tool.
+The correct format for CSV is `,` or `;` separated elements and `\n` separated rows. The upload will run and display what it can extract from the given CSV without to find errors so if the input format is not correct, the parsing might not work and will display no error. A CSV generated with this toll will be in the right format to be read by this tool.
 
 ## Build Setup
 

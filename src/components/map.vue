@@ -16,9 +16,21 @@
         />
         <button id="search-button" @click="updateView">search</button>
       </div>
-      <button id="refresh-button" @click="updateOSMData">refresh</button>
-      <button id="download-button" @click="downloadCSV">Download</button>
-      <button id="upload-button" @click="showUpload = !showUpload">Upload</button>
+      <div id="nav-bar-buttons">
+        <button id="refresh-button" @click="updateOSMData">refresh</button>
+        <button id="download-button" @click="downloadCSV">Download</button>
+        <button id="upload-button" @click="showUpload = !showUpload">Upload</button>
+        <input
+          type="number"
+          id="polyline-weight"
+          min="1"
+          max="15"
+          step="1"
+          value="5"
+          v-model="polylineWeight"
+        />
+      </div>
+      <br />
       <div id="upload-div" v-show="showUpload">
         <input
           type="file"
@@ -31,7 +43,7 @@
           id="upload-count"
         >Rendered {{ uploadedEdgeLoaded }}/{{ Object.keys(uploadedData).length }} edges from file</p>
       </div>
-      <br>
+      <br />
     </div>
     <div id="osmmap"></div>
     <div id="color-picker">
@@ -64,7 +76,8 @@ export default {
       defaultColor: "#3388ff",
       showUpload: false,
       uploadedData: {},
-      uploadedEdgeLoaded: 0
+      uploadedEdgeLoaded: 0,
+      polylineWeight: 5
     };
   },
   computed: {
@@ -131,16 +144,19 @@ export default {
                 osmResponse[i].nodes[j - 1] in nodeList
               ) {
                 let polyline = leaflet
-                  .polyline([
+                  .polyline(
                     [
-                      nodeList[osmResponse[i].nodes[j]].lat,
-                      nodeList[osmResponse[i].nodes[j]].lon
+                      [
+                        nodeList[osmResponse[i].nodes[j]].lat,
+                        nodeList[osmResponse[i].nodes[j]].lon
+                      ],
+                      [
+                        nodeList[osmResponse[i].nodes[j - 1]].lat,
+                        nodeList[osmResponse[i].nodes[j - 1]].lon
+                      ]
                     ],
-                    [
-                      nodeList[osmResponse[i].nodes[j - 1]].lat,
-                      nodeList[osmResponse[i].nodes[j - 1]].lon
-                    ]
-                  ])
+                    { weight: vueMap.polylineWeight }
+                  )
                   .addTo(vueMap.mymap);
                 if (
                   [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
@@ -307,24 +323,29 @@ export default {
         }
         vueMap.updateOSMData();
       }.bind(reader, this);
+    },
+    upPolylineSize() {
+      this.polylineWeight++;
+      this.updateOSMData();
+    },
+    downPolylineSize() {
+      this.polylineWeight--;
+      this.updateOSMData();
     }
   },
   mounted() {
     this.mymap = leaflet.map("osmmap").setView([45.4241297, 4.4077427], 16);
-    leaflet
-      .tileLayer(
-        "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}",
-        {
-          attribution:
-            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-          maxZoom: 18,
-          id: "mapbox.streets",
-          accessToken:
-            "pk.eyJ1Ijoic3BpaWxncmlpbSIsImEiOiJjanppZWgxN2gwODNzM2NvOHlmNTl4NDB6In0.7gxi13vVRZI5UMJR8ktV6A"
-        }
-      )
-      .addTo(this.mymap);
-
+    leaflet.tileLayer(
+      "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}",
+      {
+        attribution:
+          'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: "mapbox.streets",
+        accessToken:
+          "pk.eyJ1Ijoic3BpaWxncmlpbSIsImEiOiJjanppZWgxN2gwODNzM2NvOHlmNTl4NDB6In0.7gxi13vVRZI5UMJR8ktV6A"
+      }
+    );
     this.updateOSMData();
   }
 };
@@ -334,7 +355,6 @@ export default {
 #presentation {
   background-color: #2d2d2d;
   color: white;
-  height: 80px;
   width: 100%;
   position: absolute;
   top: 0;
@@ -358,8 +378,14 @@ export default {
   margin-top: 100px;
 }
 
+#nav-bar-buttons {
+  display: inline-block;
+  float: right;
+}
+
 #searchbar-div {
   display: inline-block;
+  margin-bottom: 0;
 }
 
 #location-search-bar {
@@ -374,6 +400,14 @@ export default {
   border: none;
   border-radius: 3px;
   height: 25px;
+}
+
+#polyline-weight {
+  float: right;
+  margin-right: 5px;
+  width: 70px;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 #upload-button {
@@ -409,7 +443,7 @@ export default {
 #upload-div {
   position: absolute;
   right: 5px;
-  top: 135px;
+  top: 130px;
   border: 1px solid #f2b705;
   z-index: 10;
   background-color: white;
@@ -456,5 +490,87 @@ export default {
   background-color: #d9042b;
   text-align: center;
   border: 5px solid;
+}
+
+@media only screen and (max-width: 914px) and (min-width: 677px) {
+  #upload-div {
+    top: 160px;
+  }
+
+  #searchbar-div{
+    margin-bottom: 10px;
+  }
+}
+
+@media only screen and (max-width: 676px) and (min-width: 607px) {
+  #navbar {
+    margin-top: 170px;
+  }
+
+  #upload-div {
+    top: 230px;
+  }
+
+  #location-search-bar {
+    width: 400px;
+  }
+
+  #searchbar-div{
+    margin-bottom: 10px;
+  }
+}
+
+@media only screen and (max-width: 607px) and (min-width: 593px) {
+  #navbar {
+    margin-top: 250px;
+  }
+
+  #upload-div {
+    top: 310px;
+  }
+
+  #location-search-bar {
+    width: 450px;
+  }
+
+  #searchbar-div{
+    margin-bottom: 10px;
+  }
+}
+
+@media only screen and (max-width: 593px) and (min-width: 500px) {
+  #navbar {
+    margin-top: 250px;
+  }
+
+  #upload-div {
+    top: 335px;
+  }
+
+  #location-search-bar {
+    width: 400px;
+  }
+
+  #searchbar-div{
+    margin-bottom: 10px;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  #navbar {
+    margin-top: 250px;
+  }
+
+  #upload-div {
+    top: 335px;
+  }
+
+  #location-search-bar {
+    width: 300px;
+  }
+
+  #searchbar-div{
+    margin-bottom: 10px;
+  }
 }
 </style>

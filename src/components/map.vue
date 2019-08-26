@@ -158,6 +158,18 @@ export default {
                     { weight: vueMap.polylineWeight }
                   )
                   .addTo(vueMap.mymap);
+                if (
+                  [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
+                  vueMap.uploadedData
+                ) {
+                  vueMap.uploadedEdgeLoaded++;
+                  vueMap.savedEdges[
+                    [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
+                  ] =
+                    vueMap.uploadedData[
+                      [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
+                    ];
+                }
                 if ([osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
                   vueMap.savedEdges){
                     switch (
@@ -176,33 +188,6 @@ export default {
                       break;
                   }
                   }
-                if (
-                  [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
-                  vueMap.uploadedData
-                ) {
-                  vueMap.uploadedEdgeLoaded++;
-                  vueMap.savedEdges[
-                    [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
-                  ] =
-                    vueMap.uploadedData[
-                      [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
-                    ];
-                  switch (
-                    vueMap.uploadedData[
-                      [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
-                    ]
-                  ) {
-                    case 0:
-                      polyline.setStyle({ color: "#04D924" });
-                      break;
-                    case 1:
-                      polyline.setStyle({ color: "#F2B705" });
-                      break;
-                    case 2:
-                      polyline.setStyle({ color: "#D9042B" });
-                      break;
-                  }
-                }
                 polyline.on("click", e => {
                   if (
                     [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in

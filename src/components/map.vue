@@ -158,6 +158,24 @@ export default {
                     { weight: vueMap.polylineWeight }
                   )
                   .addTo(vueMap.mymap);
+                if ([osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
+                  vueMap.savedEdges){
+                    switch (
+                    vueMap.savedEdges[
+                      [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
+                    ]
+                  ) {
+                    case 0:
+                      polyline.setStyle({ color: "#04D924" });
+                      break;
+                    case 1:
+                      polyline.setStyle({ color: "#F2B705" });
+                      break;
+                    case 2:
+                      polyline.setStyle({ color: "#D9042B" });
+                      break;
+                  }
+                  }
                 if (
                   [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
                   vueMap.uploadedData

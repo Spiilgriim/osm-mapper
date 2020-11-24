@@ -2,9 +2,6 @@
   <div id="mapwrapper">
     <div id="presentation">
       <h1>OSM road accessibility mapping tool</h1>
-      <a href="https://gitlab.com/Spiilgriim/osm-mapper">
-        <img src="../assets/gitlablogo.png" alt="Gitlab" width="60" height="60" />
-      </a>
     </div>
     <div id="navbar">
       <div id="searchbar-div">
@@ -19,7 +16,9 @@
       <div id="nav-bar-buttons">
         <button id="refresh-button" @click="updateOSMData">refresh</button>
         <button id="download-button" @click="downloadCSV">Download</button>
-        <button id="upload-button" @click="showUpload = !showUpload">Upload</button>
+        <button id="upload-button" @click="showUpload = !showUpload">
+          Upload
+        </button>
         <input
           type="number"
           id="polyline-weight"
@@ -39,21 +38,36 @@
           accept=".csv"
           @change="readParseCSV"
         />
-        <p
-          id="upload-count"
-        >Rendered {{ uploadedEdgeLoaded }}/{{ Object.keys(uploadedData).length }} edges from file</p>
+        <p id="upload-count">
+          Rendered {{ uploadedEdgeLoaded }}/{{
+            Object.keys(uploadedData).length
+          }}
+          edges from file
+        </p>
       </div>
       <br />
     </div>
     <div id="osmmap"></div>
     <div id="color-picker">
-      <div id="green-color" @click="changeColorToGreen" :style="{borderColor: greenBorderColor}">
+      <div
+        id="green-color"
+        @click="changeColorToGreen"
+        :style="{ borderColor: greenBorderColor }"
+      >
         <p id="green-color-value">Accessible for everyone</p>
       </div>
-      <div id="orange-color" @click="changeColorToOrange" :style="{borderColor: orangeBorderColor}">
+      <div
+        id="orange-color"
+        @click="changeColorToOrange"
+        :style="{ borderColor: orangeBorderColor }"
+      >
         <p id="orange-color-value">Inaccessible with a wheelchair</p>
       </div>
-      <div id="red-color" @click="changeColorToRed" :style="{borderColor: redBorderColor}">
+      <div
+        id="red-color"
+        @click="changeColorToRed"
+        :style="{ borderColor: redBorderColor }"
+      >
         <p id="red-color-value">Inaccessible</p>
       </div>
     </div>
@@ -68,16 +82,16 @@ export default {
     return {
       data: "",
       mymap: null,
-      currentNodeList: {},
-      currentEdgeList: {},
+      currentNodeList: JSON.parse(window.localStorage.getItem("edges")) || {},
+      currentEdgeList: JSON.parse(window.localStorage.getItem("nodes")) || {},
       locationSearch: "Ecole des Mines de Saint-Etienne",
       currentColor: { color: "#D9042B", value: 2 },
-      savedEdges: {},
+      savedEdges: JSON.parse(window.localStorage.getItem("savedEdges")) || {},
       defaultColor: "#3388ff",
       showUpload: false,
       uploadedData: {},
       uploadedEdgeLoaded: 0,
-      polylineWeight: 5
+      polylineWeight: 5,
     };
   },
   computed: {
@@ -98,7 +112,7 @@ export default {
         return "#af0423";
       }
       return "#D9042B";
-    }
+    },
   },
   methods: {
     updateOSMData: function() {
@@ -123,7 +137,7 @@ export default {
           if (osmResponse[i].type == "node") {
             nodeList[osmResponse[i].id] = {
               lat: osmResponse[i].lat,
-              lon: osmResponse[i].lon
+              lon: osmResponse[i].lon,
             };
           }
         }
@@ -148,12 +162,12 @@ export default {
                     [
                       [
                         nodeList[osmResponse[i].nodes[j]].lat,
-                        nodeList[osmResponse[i].nodes[j]].lon
+                        nodeList[osmResponse[i].nodes[j]].lon,
                       ],
                       [
                         nodeList[osmResponse[i].nodes[j - 1]].lat,
-                        nodeList[osmResponse[i].nodes[j - 1]].lon
-                      ]
+                        nodeList[osmResponse[i].nodes[j - 1]].lon,
+                      ],
                     ],
                     { weight: vueMap.polylineWeight }
                   )
@@ -170,9 +184,11 @@ export default {
                       [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
                     ];
                 }
-                if ([osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
-                  vueMap.savedEdges){
-                    switch (
+                if (
+                  [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
+                  vueMap.savedEdges
+                ) {
+                  switch (
                     vueMap.savedEdges[
                       [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]]
                     ]
@@ -187,8 +203,8 @@ export default {
                       polyline.setStyle({ color: "#D9042B" });
                       break;
                   }
-                  }
-                polyline.on("click", e => {
+                }
+                polyline.on("click", (e) => {
                   if (
                     [osmResponse[i].nodes[j], osmResponse[i].nodes[j - 1]] in
                     vueMap.savedEdges
@@ -203,6 +219,10 @@ export default {
                     ] = vueMap.currentColor.value;
                     e.target.setStyle({ color: vueMap.currentColor.color });
                   }
+                  window.localStorage.setItem(
+                    "savedEdges",
+                    JSON.stringify(vueMap.savedEdges)
+                  );
                 });
               }
             }
@@ -244,17 +264,14 @@ export default {
         }
       }
       leaflet
-        .tileLayer(
-          "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}",
-          {
-            attribution:
-              'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 18,
-            id: "mapbox.streets",
-            accessToken:
-              "pk.eyJ1Ijoic3BpaWxncmlpbSIsImEiOiJjanppZWgxN2gwODNzM2NvOHlmNTl4NDB6In0.7gxi13vVRZI5UMJR8ktV6A"
-          }
-        )
+        .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+          maxZoom: 18,
+          id: "mapbox.streets",
+          accessToken:
+            "pk.eyJ1Ijoic3BpaWxncmlpbSIsImEiOiJjanppZWgxN2gwODNzM2NvOHlmNTl4NDB6In0.7gxi13vVRZI5UMJR8ktV6A",
+        })
         .addTo(this.mymap);
     },
     changeColorToGreen() {
@@ -334,7 +351,7 @@ export default {
     downPolylineSize() {
       this.polylineWeight--;
       this.updateOSMData();
-    }
+    },
   },
   mounted() {
     this.mymap = leaflet.map("osmmap").setView([45.4241297, 4.4077427], 16);
@@ -346,11 +363,28 @@ export default {
         maxZoom: 18,
         id: "mapbox.streets",
         accessToken:
-          "pk.eyJ1Ijoic3BpaWxncmlpbSIsImEiOiJjanppZWgxN2gwODNzM2NvOHlmNTl4NDB6In0.7gxi13vVRZI5UMJR8ktV6A"
+          "pk.eyJ1Ijoic3BpaWxncmlpbSIsImEiOiJjanppZWgxN2gwODNzM2NvOHlmNTl4NDB6In0.7gxi13vVRZI5UMJR8ktV6A",
       }
     );
     this.updateOSMData();
-  }
+  },
+  watch: {
+    currentNodeList: (newValue) => {
+      window.console.log("nodes");
+      window.console.log(newValue);
+      window.localStorage.setItem("nodes", JSON.stringify(newValue));
+    },
+    currentEdgeList: (newValue) => {
+      window.console.log("edges");
+      window.console.log(newValue);
+      window.localStorage.setItem("edges", JSON.stringify(newValue));
+    },
+    savedEdges: (newValue) => {
+      window.console.log("savedEdges");
+      window.console.log(newValue);
+      window.localStorage.setItem("savedEdges", JSON.stringify(newValue));
+    },
+  },
 };
 </script>
 
@@ -500,7 +534,7 @@ export default {
     top: 160px;
   }
 
-  #searchbar-div{
+  #searchbar-div {
     margin-bottom: 10px;
   }
 }
@@ -518,7 +552,7 @@ export default {
     width: 400px;
   }
 
-  #searchbar-div{
+  #searchbar-div {
     margin-bottom: 10px;
   }
 }
@@ -536,7 +570,7 @@ export default {
     width: 450px;
   }
 
-  #searchbar-div{
+  #searchbar-div {
     margin-bottom: 10px;
   }
 }
@@ -554,7 +588,7 @@ export default {
     width: 400px;
   }
 
-  #searchbar-div{
+  #searchbar-div {
     margin-bottom: 10px;
   }
 }
@@ -572,7 +606,7 @@ export default {
     width: 300px;
   }
 
-  #searchbar-div{
+  #searchbar-div {
     margin-bottom: 10px;
   }
 }

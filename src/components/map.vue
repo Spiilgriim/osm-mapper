@@ -16,9 +16,7 @@
       <div id="nav-bar-buttons">
         <button id="refresh-button" @click="updateOSMData">refresh</button>
         <button id="download-button" @click="downloadCSV">Download</button>
-        <button id="upload-button" @click="showUpload = !showUpload">
-          Upload
-        </button>
+        <button id="upload-button" @click="showUpload = !showUpload">Upload</button>
         <input
           type="number"
           id="polyline-weight"
@@ -40,7 +38,7 @@
         />
         <p id="upload-count">
           Rendered {{ uploadedEdgeLoaded }}/{{
-            Object.keys(uploadedData).length
+          Object.keys(uploadedData).length
           }}
           edges from file
         </p>
@@ -49,11 +47,7 @@
     </div>
     <div id="osmmap"></div>
     <div id="color-picker">
-      <div
-        id="green-color"
-        @click="changeColorToGreen"
-        :style="{ borderColor: greenBorderColor }"
-      >
+      <div id="green-color" @click="changeColorToGreen" :style="{ borderColor: greenBorderColor }">
         <p id="green-color-value">Accessible for everyone</p>
       </div>
       <div
@@ -63,11 +57,7 @@
       >
         <p id="orange-color-value">Inaccessible with a wheelchair</p>
       </div>
-      <div
-        id="red-color"
-        @click="changeColorToRed"
-        :style="{ borderColor: redBorderColor }"
-      >
+      <div id="red-color" @click="changeColorToRed" :style="{ borderColor: redBorderColor }">
         <p id="red-color-value">Inaccessible</p>
       </div>
     </div>
@@ -95,19 +85,19 @@ export default {
     };
   },
   computed: {
-    greenBorderColor: function() {
+    greenBorderColor: function () {
       if (this.currentColor.value == 0) {
         return "#04af1d";
       }
       return "#04D924";
     },
-    orangeBorderColor: function() {
+    orangeBorderColor: function () {
       if (this.currentColor.value == 1) {
         return "#c89704";
       }
       return "#F2B705";
     },
-    redBorderColor: function() {
+    redBorderColor: function () {
       if (this.currentColor.value == 2) {
         return "#af0423";
       }
@@ -115,7 +105,7 @@ export default {
     },
   },
   methods: {
-    updateOSMData: function() {
+    updateOSMData: function () {
       this.clearMap();
       let request = new XMLHttpRequest();
       let bounds = this.mymap.getBounds();
@@ -131,7 +121,7 @@ export default {
       let nodeList = {};
       let edgeList = {};
       request.open("GET", apiUrl, true);
-      request.onload = function(vueMap) {
+      request.onload = function (vueMap) {
         let osmResponse = JSON.parse(this.response).elements;
         for (let i = 0; i < osmResponse.length; i++) {
           if (osmResponse[i].type == "node") {
@@ -242,7 +232,7 @@ export default {
         this.locationSearch +
         "?format=json";
       request.open("GET", apiUrl, true);
-      request.onload = function(vueMap) {
+      request.onload = function (vueMap) {
         let osmRequest = JSON.parse(this.response);
         if (osmRequest.length > 0) {
           vueMap.mymap.setView([osmRequest[0].lat, osmRequest[0].lon], 16);
@@ -312,7 +302,7 @@ export default {
       let file = event.target.files[0];
       let reader = new FileReader();
       reader.readAsText(file);
-      reader.onload = function(vueMap) {
+      reader.onload = function (vueMap) {
         vueMap.uploadedData = {};
         let csvData = reader.result;
         let temp = ["", "", ""];
@@ -370,18 +360,12 @@ export default {
   },
   watch: {
     currentNodeList: (newValue) => {
-      window.console.log("nodes");
-      window.console.log(newValue);
       window.localStorage.setItem("nodes", JSON.stringify(newValue));
     },
     currentEdgeList: (newValue) => {
-      window.console.log("edges");
-      window.console.log(newValue);
       window.localStorage.setItem("edges", JSON.stringify(newValue));
     },
     savedEdges: (newValue) => {
-      window.console.log("savedEdges");
-      window.console.log(newValue);
       window.localStorage.setItem("savedEdges", JSON.stringify(newValue));
     },
   },
